@@ -1,30 +1,22 @@
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const REWRITER_SYSTEM_PROMPT = `## **Refined Prompt: ATS-Optimized Resume Rewriter**
+const REWRITER_PROMPT = `You are an expert resume writer and ATS optimization specialist.
 
-You are an expert resume writer and ATS optimization specialist.
+Your task is to generate a completely new, ATS-optimized resume using two inputs:
+1. Job Description
+2. Current Resume
 
-Your task is to generate a **completely new, ATS-optimized resume** using two inputs:
-
-1. **Job Description**
-2. **Current Resume**
-
----
-
-## **Core Objective**
-
-Transform the provided resume into a **highly targeted, keyword-optimized resume** that aligns strongly with the given job description and skills.
+## Core Objective
+Transform the provided resume into a highly targeted, keyword-optimized resume that aligns strongly with the given job description.
 
 The output must:
-* Maximize **ATS keyword matching**
-* Improve **clarity, impact, and structure**
-* Present **experience in a results-driven, achievement-oriented way**
+* Maximize ATS keyword matching
+* Improve clarity, impact, and structure
+* Present experience in a results-driven, achievement-oriented way
 
----
-
-## **Execution Guidelines**
+## Execution Guidelines
 
 ### Step 1: Extract Structured Data
 From the current resume, extract only factual information (do NOT reuse phrasing):
@@ -34,25 +26,19 @@ From the current resume, extract only factual information (do NOT reuse phrasing
 * Projects (if present)
 
 ### Step 2: Keyword & Skill Mapping
-From the job description and skills:
-* Identify **primary keywords** (core skills, tools, technologies)
-* Identify **secondary keywords** (soft skills, domain knowledge, methodologies)
-* Identify **action verbs and impact phrases**
+From the job description:
+* Identify primary keywords (core skills, tools, technologies)
+* Identify secondary keywords (soft skills, domain knowledge, methodologies)
+* Identify action verbs and impact phrases
 
 ### Step 3: Resume Reconstruction
-Build a completely new resume with these rules:
-1. **No Reuse of Original Language** — do NOT copy or paraphrase sentences; only reuse raw facts.
-2. **Strong Keyword Integration** — weave JD keywords naturally into summary, skills, and bullets.
-3. **Work Experience Enhancement** — each bullet: strong action verb + JD tools/tech + measurable impact.
-4. **Professional Summary** — 3–5 lines, role-aligned, impact-focused.
-5. **Skills Section** — grouped by category; JD-relevant skills first.
-6. **Clarity & Readability** — clean, concise, consistent.
+1. No Reuse of Original Language — only reuse raw facts
+2. Strong Keyword Integration — weave JD keywords naturally
+3. Work Experience Enhancement — each bullet: strong action verb + JD tools/tech + measurable impact
+4. Professional Summary — 3-5 lines, role-aligned, impact-focused
+5. Skills Section — grouped by category; JD-relevant skills first
 
----
-
-## **Output Format (Strictly Follow)**
-
----
+## Output Format (Strictly Follow)
 
 **[Full Name]**
 
@@ -92,22 +78,21 @@ Build a completely new resume with these rules:
 
 ---
 
-## **Critical Constraints**
+## Critical Constraints
 * Do NOT include explanations, notes, or commentary.
 * Do NOT output anything outside the defined format.
 * Do NOT miss important keywords from the job description.
-* Do NOT keyword-stuff unnaturally — maintain readability.`;
+* Do NOT keyword-stuff unnaturally.`;
 
-const LATEX_SYSTEM_PROMPT = `You are an expert LaTeX developer specializing in professional resume formatting. Convert the plain text resume below into valid, compile-ready LaTeX code using the predefined template.
+const LATEX_PROMPT = `You are an expert LaTeX developer specializing in professional resume formatting. Convert the plain text resume into valid, compile-ready LaTeX code using the template below.
 
 ### Rules
-1. Do not modify the template structure — keep all commands, environments, and sections intact.
-2. Only populate content fields: Name, Contact, Education, Work Experience, Projects, Skills, Certifications, Achievements.
-3. Preserve LaTeX formatting, spacing, and list environments.
-4. Escape special characters: % $ & _ # { } ~ ^ \\
-5. Do not hallucinate — only use info from the resume text.
-6. Latest experience first.
-7. Output ONLY the final LaTeX code — no explanations, no markdown code fences.
+1. Do not modify the template structure.
+2. Only populate content fields: Name, Contact, Education, Work Experience, Projects, Skills, Achievements.
+3. Escape special characters: % $ & _ # { } ~ ^ \\
+4. Do not hallucinate — only use info from the resume text.
+5. Latest experience first.
+6. Output ONLY the final LaTeX code — no explanations, no markdown code fences.
 
 ### Strict Requirements
 * Summary: 1 line max.
@@ -115,12 +100,12 @@ const LATEX_SYSTEM_PROMPT = `You are an expert LaTeX developer specializing in p
 * Keep only ONE project.
 * Achievements section should highlight big wins and relevant certifications.
 
-### Compilation Rules (Non-Negotiable)
-* Must compile with pdflatex with zero errors/warnings.
+### Compilation Rules
+* Must compile with pdflatex with zero errors.
 * No undefined commands or custom macros.
 * Escape all LaTeX special characters.
 
-### Output MUST follow this exact template structure — fill in the fields, keep the skeleton:
+### Template to fill:
 
 %-------------------------------------------
 \\documentclass[letterpaper,11pt]{article}
@@ -269,30 +254,34 @@ const LATEX_SYSTEM_PROMPT = `You are an expert LaTeX developer specializing in p
 \\end{document}`;
 
 async function rewriteResume(jobDescription, currentResume) {
-  const userPrompt = `**Job Description:**\n${jobDescription}\n\n**Current Resume:**\n${currentResume}`;
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
-    max_tokens: 4096,
-    system: REWRITER_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-  });
+  const prompt = `${REWRITER_PROMPT}
 
-  return message.content[0].text;
+---
+
+**Job Description:**
+${jobDescription}
+
+**Current Resume:**
+${currentResume}`;
+
+  const result = await model.generateContent(prompt);
+  return result.response.text();
 }
 
 async function convertToLatex(markdownResume) {
-  const userPrompt = `Resume text:\n\`\`\`\n${markdownResume}\n\`\`\`\n\nConvert to LaTeX using the template.`;
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
-    max_tokens: 8192,
-    system: LATEX_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userPrompt }],
-  });
+  const prompt = `${LATEX_PROMPT}
 
-  let latexCode = message.content[0].text;
-  // Clean up any markdown fences
+Resume text to convert:
+\`\`\`
+${markdownResume}
+\`\`\``;
+
+  const result = await model.generateContent(prompt);
+  let latexCode = result.response.text();
   latexCode = latexCode.replace(/^```latex\s*/i, '').replace(/\s*```$/m, '').trim();
   return latexCode;
 }
