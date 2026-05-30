@@ -258,7 +258,8 @@ export default function App() {
     );
 
     try {
-      const resp = await fetch('/api/generate', {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+const resp = await fetch(`${apiUrl}/api/generate`, {, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobDescription: jd, currentResume: resume }),
