@@ -15,9 +15,9 @@ router.post('/', async (req, res) => {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ status: 'error', message: 'Anthropic API key not configured.' });
   }
-  if (!process.env.OVERLEAF_SESSION_COOKIE || !process.env.OVERLEAF_GCLB_TOKEN) {
-    return res.status(500).json({ status: 'error', message: 'Overleaf credentials not configured. Please set environment variables.' });
-  }
+  if (!process.env.OVERLEAF_SESSION_COOKIE) {
+  return res.status(500).json({ status: 'error', message: 'Overleaf session cookie not configured.' });
+}
 
   try {
     // Step 1: Rewrite resume with Claude
