@@ -3,7 +3,9 @@ const fetch = require('node-fetch');
 function getCookieHeader() {
   const SESSION_COOKIE = decodeURIComponent(process.env.OVERLEAF_SESSION_COOKIE);
   const GCLB_TOKEN = process.env.OVERLEAF_GCLB_TOKEN;
-  return `overleaf_session2=${SESSION_COOKIE}; GCLB=${GCLB_TOKEN}`;
+  let cookie = `overleaf_session2=${SESSION_COOKIE}`;
+  if (GCLB_TOKEN) cookie += `; GCLB=${GCLB_TOKEN}`;
+  return cookie;
 }
 
 // Step 4: Fetch CSRF token
