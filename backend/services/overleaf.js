@@ -62,6 +62,7 @@ async function compileProject(projectId, csrfToken) {
   params.append('check', 'silent');
   params.append('draft', 'false');
   params.append('stopOnFirstError', 'false');
+  params.append('rootResourcePath', 'main.tex');
 
   await new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -79,7 +80,6 @@ async function compileProject(projectId, csrfToken) {
   const data = await response.json();
   console.log('COMPILE STATUS:', data.status);
   console.log('OUTPUT FILES:', JSON.stringify(data.outputFiles));
-  console.log('COMPILE DATA:', JSON.stringify(data).substring(0, 500));
 
   const outputFiles = data.outputFiles || [];
   const pdfFile = outputFiles.find(f => f.path === 'output.pdf');
