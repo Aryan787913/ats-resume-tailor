@@ -81,6 +81,8 @@ Template:
 \\usepackage[english]{babel}
 \\usepackage{tabularx}
 \\usepackage{fontawesome5}
+\\usepackage{amsmath}
+\\usepackage{amssymb}
 \\definecolor{light-grey}{gray}{0.83}
 \\definecolor{dark-grey}{gray}{0.3}
 \\definecolor{text-grey}{gray}{.08}
