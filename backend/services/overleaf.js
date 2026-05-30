@@ -58,11 +58,14 @@ async function createOverleafProject(latexCode) {
 async function compileProject(projectId, csrfToken) {
   const cookieHeader = getCookieHeader();
   const projectUrl = `https://www.overleaf.com/project/${projectId}`;
+
   const params = new URLSearchParams();
   params.append('check', 'silent');
-  params.append('draft', 'true');
+  params.append('draft', 'false');
   params.append('stopOnFirstError', 'false');
-  const response = await fetch(`https://www.overleaf.com/project/${projectId}/compile`, {
+
+  // First compile
+  await fetch(`https://www.overleaf.com/project/${projectId}/compile`, {
     method: 'POST',
     headers: {
       'Cookie': cookieHeader,
@@ -72,18 +75,34 @@ async function compileProject(projectId, csrfToken) {
     },
     body: params.toString(),
   });
-  const data = await response.json();
 
-  // Wait for Overleaf to finish compiling
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  // Wait for compilation to finish
+  await new Promise(resolve => setTimeout(resolve, 8000));
+
+  // Second compile to get output files
+  const response2 = await fetch(`https://www.overleaf.com/project/${projectId}/compile`, {
+    method: 'POST',
+    headers: {
+      'Cookie': cookieHeader,
+      'X-Csrf-Token': csrfToken,
+      'Accept': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+
+  const data = await response2.json();
+  await new Promise(resolve => setTimeout(resolve, 3000));
 
   const outputFiles = data.outputFiles || [];
   const pdfFile = outputFiles.find(f => f.path === 'output.pdf');
+
   if (!pdfFile) {
     const err = new Error(`PDF compilation failed. Open the project in Overleaf to see the log.`);
     err.projectUrl = projectUrl;
     throw err;
   }
+
   const pdfUrl = 'https://www.overleaf.com' + pdfFile.url;
   return { pdfUrl, projectUrl };
 }
