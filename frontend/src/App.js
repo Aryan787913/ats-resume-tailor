@@ -258,8 +258,8 @@ export default function App() {
     );
 
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
-const resp = await fetch(`${apiUrl}/api/generate`, {, {
+      const apiUrl = 'https://ats-resume-tailor-x2mz.onrender.com';
+const resp = await fetch(`${apiUrl}/api/generate`,  {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobDescription: jd, currentResume: resume }),
