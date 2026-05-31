@@ -64,8 +64,6 @@ async function compileProject(projectId, csrfToken) {
   params.append('stopOnFirstError', 'false');
   params.append('rootResourcePath', 'main.tex');
 
-  await new Promise(resolve => setTimeout(resolve, 5000));
-
   const response = await fetch(`https://www.overleaf.com/project/${projectId}/compile`, {
     method: 'POST',
     headers: {
@@ -96,12 +94,15 @@ async function compileProject(projectId, csrfToken) {
 
 async function downloadPdf(pdfUrl) {
   const cookieHeader = getCookieHeader();
+  console.log('Downloading PDF from:', pdfUrl);
   const response = await fetch(pdfUrl, {
     method: 'GET',
     headers: {
       'Cookie': cookieHeader,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     },
   });
+  console.log('PDF download status:', response.status);
   if (!response.ok) {
     throw new Error(`Failed to download PDF: ${response.status} ${response.statusText}`);
   }
