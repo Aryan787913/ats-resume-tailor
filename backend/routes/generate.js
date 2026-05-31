@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
     const { pdfUrl, projectUrl } = await compileProject(projectId, csrfToken);
 
     console.log('[Step 7] Downloading PDF...');
-    const pdfBase64 = await downloadPdf(projectId);
+    const pdfBase64 = await downloadPdf(projectId, pdfUrl);
 
     return res.json({
       status: 'success',
