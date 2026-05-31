@@ -92,14 +92,19 @@ async function compileProject(projectId, csrfToken) {
   return { pdfUrl, projectUrl };
 }
 
-async function downloadPdf(pdfUrl) {
+async function downloadPdf(pdfUrl, projectId) {
   const cookieHeader = getCookieHeader();
-  console.log('Downloading PDF from:', pdfUrl);
-  const response = await fetch(pdfUrl, {
+  
+  // Use the correct Overleaf download endpoint
+  const downloadUrl = `https://www.overleaf.com/project/${projectId}/output/output.pdf`;
+  console.log('Downloading PDF from:', downloadUrl);
+  
+  const response = await fetch(downloadUrl, {
     method: 'GET',
     headers: {
       'Cookie': cookieHeader,
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'Accept': 'application/pdf',
     },
   });
   console.log('PDF download status:', response.status);
