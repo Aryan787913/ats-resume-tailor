@@ -78,31 +78,31 @@ async function compileProject(projectId, csrfToken) {
   const data = await response.json();
   console.log('COMPILE STATUS:', data.status);
 
-  // Accept both success and errors — PDF may still be generated
   const outputFiles = data.outputFiles || [];
   const pdfFile = outputFiles.find(f => f.path === 'output.pdf');
 
   if (!pdfFile) {
-    const err = new Error(`PDF compilation failed. Status: ${data.status}. Open the project in Overleaf to see the log.`);
+    const err = new Error(`PDF compilation failed. Status: ${data.status}.`);
     err.projectUrl = projectUrl;
     throw err;
   }
 
   const pdfUrl = 'https://www.overleaf.com' + pdfFile.url;
+  console.log('PDF URL from compile:', pdfUrl);
   return { pdfUrl, projectUrl };
 }
 
-async function downloadPdf(projectId) {
+async function downloadPdf(projectId, pdfUrl) {
   const cookieHeader = getCookieHeader();
-  const downloadUrl = `https://www.overleaf.com/project/${projectId}/output/output.pdf`;
-  console.log('Downloading PDF from:', downloadUrl);
+  console.log('Downloading PDF from:', pdfUrl);
 
-  const response = await fetch(downloadUrl, {
+  const response = await fetch(pdfUrl, {
     method: 'GET',
     headers: {
       'Cookie': cookieHeader,
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       'Accept': 'application/pdf,*/*',
+      'Referer': `https://www.overleaf.com/project/${projectId}`,
     },
   });
   console.log('PDF download status:', response.status);
