@@ -80,4 +80,102 @@ Use this exact template:
 \\newcommand{\\resumeSubheading}[4]{
   \\vspace{-1pt}\\item
     \\begin{tabular*}{\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
-      \\textbf{#1} &
+      \\textbf{#1} & {\\color{dark-grey}\\small #2}\\\\
+      \\textit{\\small#3} & {\\color{dark-grey}\\small #4}\\\\
+    \\end{tabular*}\\vspace{-4pt}
+}
+\\newcommand{\\resumeProjectHeading}[2]{
+  \\item
+  \\begin{tabular*}{\\textwidth}{l@{\\extracolsep{\\fill}}r}
+    \\small#1 & {\\color{dark-grey}\\small #2}\\\\
+  \\end{tabular*}\\vspace{-4pt}
+}
+\\newcommand{\\resumeSubHeadingListStart}{\\begin{itemize}[leftmargin=0in,label={}]}
+\\newcommand{\\resumeSubHeadingListEnd}{\\end{itemize}}
+\\newcommand{\\resumeItemListStart}{\\begin{itemize}[leftmargin=0.15in]}
+\\newcommand{\\resumeItemListEnd}{\\end{itemize}\\vspace{-4pt}}
+\\color{text-grey}
+\\begin{document}
+
+\\begin{center}
+  \\textbf{\\Huge CANDIDATE NAME} \\\\[4pt]
+  \\small
+  \\faPhone\\ 1234567890 \\quad
+  \\faEnvelope\\ email@email.com \\quad
+  \\faLinkedin\\ linkedin.com/in/profile \\quad
+  \\faGithub\\ github.com/profile \\quad
+  \\faMapMarker\\ City, Country
+\\end{center}
+
+\\section{Summary}
+One line professional summary here.
+
+\\section{Education}
+\\resumeSubHeadingListStart
+  \\resumeSubheading{University Name}{2020 -- 2024}{Bachelor of Science in Computer Science}{City, Country}
+\\resumeSubHeadingListEnd
+
+\\section{Experience}
+\\resumeSubHeadingListStart
+  \\resumeSubheading{Company Name}{Jan 2023 -- Present}{Job Title}{City, Country}
+  \\resumeItemListStart
+    \\resumeItem{Achievement bullet one with metrics}
+    \\resumeItem{Achievement bullet two with metrics}
+    \\resumeItem{Achievement bullet three with metrics}
+  \\resumeItemListEnd
+\\resumeSubHeadingListEnd
+
+\\section{Projects}
+\\resumeSubHeadingListStart
+  \\resumeProjectHeading{\\textbf{Project Name}}{2023}
+  \\resumeItemListStart
+    \\resumeItem{Project description with technologies used}
+  \\resumeItemListEnd
+\\resumeSubHeadingListEnd
+
+\\section{Skills}
+\\begin{itemize}[leftmargin=0in,label={}]
+  \\small{\\item{
+    \\textbf{Category One}: skill1, skill2, skill3 \\\\
+    \\textbf{Category Two}: skill1, skill2, skill3
+  }}
+\\end{itemize}
+
+\\section{Achievements}
+\\begin{itemize}[leftmargin=0in,label={}]
+  \\small{\\item{
+    \\textbf{Achievement}: description here
+  }}
+\\end{itemize}
+
+\\end{document}`;
+
+async function rewriteResume(jobDescription, currentResume) {
+  const completion = await groq.chat.completions.create({
+    model: MODEL,
+    max_tokens: 2000,
+    temperature: 0.3,
+    messages: [
+      { role: 'system', content: REWRITER_PROMPT },
+      { role: 'user', content: `Job Description:\n${jobDescription}\n\nCurrent Resume:\n${currentResume}` }
+    ],
+  });
+  return completion.choices[0].message.content;
+}
+
+async function convertToLatex(markdownResume) {
+  const completion = await groq.chat.completions.create({
+    model: MODEL,
+    max_tokens: 4000,
+    temperature: 0.1,
+    messages: [
+      { role: 'system', content: LATEX_PROMPT },
+      { role: 'user', content: `Convert this resume to LaTeX. Remember: escape ALL special characters. Output ONLY raw LaTeX code:\n\n${markdownResume}` }
+    ],
+  });
+  let latexCode = completion.choices[0].message.content;
+  latexCode = latexCode.replace(/^```latex\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/m, '').trim();
+  return latexCode;
+}
+
+module.exports = { rewriteResume, convertToLatex };
