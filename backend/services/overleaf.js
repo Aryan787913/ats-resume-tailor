@@ -91,24 +91,21 @@ async function compileProject(projectId, csrfToken) {
   console.log('PDF URL from compile:', pdfUrl);
   return { pdfUrl, projectUrl };
 }
-
 async function downloadPdf(projectId, pdfUrl) {
   const cookieHeader = getCookieHeader();
   console.log('Downloading PDF from:', pdfUrl);
 
-  // Add compileGroup and popupDownload params that Overleaf requires
-  const urlWithParams = pdfUrl + '?compileGroup=standard&popupDownload=true';
-  const response = await fetch(urlWithParams, {
+  const response = await fetch(pdfUrl, {
     method: 'GET',
     headers: {
       'Cookie': cookieHeader,
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       'Accept': 'application/pdf,*/*',
       'Referer': `https://www.overleaf.com/project/${projectId}`,
-      'X-Csrf-Token': '',
+      'Origin': 'https://www.overleaf.com',
     },
+    redirect: 'follow',
   });
-  console.log('Download URL:', urlWithParams);
   console.log('PDF download status:', response.status);
   if (!response.ok) {
     throw new Error(`Failed to download PDF: ${response.status} ${response.statusText}`);
